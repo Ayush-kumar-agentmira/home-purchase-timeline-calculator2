@@ -3,6 +3,13 @@ import React, { useState, useEffect } from 'react';
 const HomePurchase1 = () => {
   // Property type selection
   const [propertyType, setPropertyType] = useState('median-single-family');
+  //financial status
+const [financialCase, setFinancialCase] = useState('20-down-rent');
+
+// State object to store financial values per case
+const [financialValues, setFinancialValues] = useState({
+  paysRent: true,
+});
   
   // March 2024 scenario inputs
   const [homePriceMarch2024, setHomePriceMarch2024] = useState(650000); // Median Miami single-family home price Q1 2024
@@ -12,7 +19,7 @@ const HomePurchase1 = () => {
   const [showCashFlow, setShowCashFlow] = useState(false);
   
   // March 2025 scenario inputs
-  const [homePriceAppreciationPercent, setHomePriceAppreciationPercent] = useState(0.34);
+  const [homePriceAppreciationPercent, setHomePriceAppreciationPercent] = useState(6.2);
   const [homePriceMarch2025, setHomePriceMarch2025] = useState(690000);
   const [downPaymentPercentMarch2025, setDownPaymentPercentMarch2025] = useState(20);
   const [mortgageRateMarch2025, setMortgageRateMarch2025] = useState(6.2);
@@ -20,7 +27,7 @@ const HomePurchase1 = () => {
   
   // Costs during waiting period
   const [monthlyRent, setMonthlyRent] = useState(2850); // Median rent for comparable property
-  const [investmentReturnRate, setInvestmentReturnRate] = useState(10);
+  const [investmentReturnRate, setInvestmentReturnRate] = useState(6.8);
   
   // Additional costs
   const [annualPropertyTaxRate, setAnnualPropertyTaxRate] = useState(1.05);
@@ -102,10 +109,12 @@ const HomePurchase1 = () => {
       totalPosition: {
         totalCashSpent: 0,
         investmentReturns: 0,
-        netCashPosition: 0
+        netCashPosition: 0,
+        netCashPositionNoRent: 0,
       },
       cashEfficiency: {
         totalCashInvested: 0,
+        totalCashInvestedNoRent: 0,
         totalValueGained: 0,
         cashEfficiencyRatio: 0
       }
@@ -273,14 +282,16 @@ const HomePurchase1 = () => {
     // Total Position
     const CFA_march2025_totalCashSpent = CFA_march2025_totalRentPaid + CFA_march2025_totalPurchaseCosts;
     const CFA_march2025_netCashPosition = CFA_march2025_investmentReturns - CFA_march2025_totalRentPaid - CFA_march2025_closingCosts;
+    const CFA_march2025_netCashPosition_no_rent = CFA_march2025_investmentReturns - CFA_march2025_closingCosts - ((0.25 * homePriceMarch2024) /100) *12;
   
     // Cash Efficiency Metrics
     const CFA_march2025_totalCashInvested = CFA_march2025_totalRentPaid + CFA_march2025_downPayment + CFA_march2025_closingCosts;
+    const CFA_march2025_totalCashInvested_no_rent = CFA_march2025_downPayment + CFA_march2025_closingCosts + ((0.25 * homePriceMarch2024) /100) *12;
     const CFA_march2025_totalValueGained = CFA_march2025_downPayment + CFA_march2025_investmentReturns;
     const CFA_march2025_cashEfficiencyRatio = CFA_march2025_totalValueGained / CFA_march2025_totalCashInvested;
   
     // ========== COMPARISON ==========
-    const CFA_difference = CFA_march2025_netCashPosition - CFA_march2024_netCashPosition;
+    const CFA_difference = financialValues.paysRent ? CFA_march2025_netCashPosition - CFA_march2024_netCashPosition : CFA_march2025_netCashPosition_no_rent - CFA_march2024_netCashPosition;
     const CFA_recommendation = CFA_difference > 0 
       ? "Waiting to purchase until March 2025 is financially advantageous from a cash flow perspective."
       : "Purchasing in March 2024 is financially advantageous from a cash flow perspective.";
@@ -313,7 +324,8 @@ const HomePurchase1 = () => {
           totalCashInvested: Math.round(CFA_march2024_totalCashInvested),
           totalValueGained: Math.round(CFA_march2024_totalValueGained),
           cashEfficiencyRatio: Math.round(CFA_march2024_cashEfficiencyRatio * 100) / 100,
-          netCashPosition: Math.round(CFA_march2024_netCashPosition)
+          netCashPosition: Math.round(CFA_march2024_netCashPosition),
+          
         },
         opportunityCost: {
           potentialInvestmentReturns: Math.round(CFA_march2024_potentialInvestmentReturns),
@@ -334,10 +346,12 @@ const HomePurchase1 = () => {
         totalPosition: {
           totalCashSpent: Math.round(CFA_march2025_totalCashSpent),
           investmentReturns: Math.round(CFA_march2025_investmentReturns),
-          netCashPosition: Math.round(CFA_march2025_netCashPosition)
+          netCashPosition: Math.round(CFA_march2025_netCashPosition),
+          netCashPositionNoRent : Math.round(CFA_march2025_netCashPosition_no_rent)
         },
         cashEfficiency: {
           totalCashInvested: Math.round(CFA_march2025_totalCashInvested),
+          totalCashInvestedNoRent: Math.round(CFA_march2025_totalCashInvested_no_rent),
           totalValueGained: Math.round(CFA_march2025_totalValueGained),
           cashEfficiencyRatio: Math.round(CFA_march2025_cashEfficiencyRatio * 100) / 100
         }
@@ -372,8 +386,9 @@ const HomePurchase1 = () => {
   }, [
     homePriceMarch2024, downPaymentPercentMarch2024, mortgageRateMarch2024, mortgageTermMarch2024,
     homePriceAppreciationPercent, homePriceMarch2025, downPaymentPercentMarch2025, mortgageRateMarch2025, mortgageTermMarch2025,
-    monthlyRent, investmentReturnRate, annualPropertyTaxRate, annualHomeInsurance, monthlyHOA, annualMaintenance, closingCostsPercent
+    monthlyRent, investmentReturnRate, annualPropertyTaxRate, annualHomeInsurance, monthlyHOA, annualMaintenance, closingCostsPercent,financialValues.paysRent
   ]);
+  console.log("values", cashFlowResults.march2025.totalPosition.netCashPositionNoRent)
   
   // Format currency
   const formatCurrency = (value) => {
@@ -385,30 +400,37 @@ const HomePurchase1 = () => {
     if (propertyType === 'median-single-family') {
       setHomePriceMarch2024(650000);
       setMonthlyHOA(0);
+      setHomePriceAppreciationPercent(6.2)
       if (autoCalculateRent) setMonthlyRent(3990);
     } else if (propertyType === 'median-condo') {
       setHomePriceMarch2024(450000);
       setMonthlyHOA(450);
+      setHomePriceAppreciationPercent(1.4);
       if (autoCalculateRent) setMonthlyRent(2700);
     } else if (propertyType === 'starter') {
       setHomePriceMarch2024(450000);
       setMonthlyHOA(250);
+      setHomePriceAppreciationPercent(2.8)
       if (autoCalculateRent) setMonthlyRent(1800);
     } else if (propertyType === 'mid-market') {
       setHomePriceMarch2024(640000);
       setMonthlyHOA(300);
+      setHomePriceAppreciationPercent(1.6);
       if (autoCalculateRent) setMonthlyRent(3840);
     } else if (propertyType === 'luxury') {
       setHomePriceMarch2024(2200000);
       setMonthlyHOA(850);
+      setHomePriceAppreciationPercent(12.5);
       if (autoCalculateRent) setMonthlyRent(13200);
     } else if (propertyType === 'ultra-luxury') {
       setHomePriceMarch2024(3984000);
       setMonthlyHOA(1200);
+      setHomePriceAppreciationPercent(21.7)
       if (autoCalculateRent) setMonthlyRent(23904);
     } else if (propertyType === 'coral-gables') {
       setHomePriceMarch2024(1687500);
       setMonthlyHOA(600);
+      setHomePriceAppreciationPercent(34.5)
       if (autoCalculateRent) setMonthlyRent(10125);
     }
   
@@ -434,74 +456,160 @@ const HomePurchase1 = () => {
     autoCalculateRent
   ]);
   
+
+
+
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Home Purchase Timing Calculator: March 2024 vs. March 2025</h1>
+        {/* Branding Header */}
+    <div className="flex items-center justify-between bg-gray-100 rounded-xl shadow-sm p-4 mb-6">
+    {/* Logo with background */}
+    <div className="bg-white px-3 py-2 rounded-lg shadow border border-gray-200">
+      <img src="logo.png" alt="Logo" className="h-14 w-auto" />
+    </div>
+
+    {/* Agent Mira photo with name */}
+    <div className="flex items-center space-x-3">
+      <img
+        src="/agent-mira-pic.png"
+        alt="Agent Mira"
+        className="h-20 w-20 rounded-full object-cover border-2 border-blue-400 shadow-lg"
+      />
+      <div>
+        <p className="text-sm text-gray-600">Your Trusted Advisor</p>
+        <p className="font-semibold text-blue-700 text-lg">Agent Mira</p>
+      </div>
+    </div>
+  </div>
+
+    <h1 className="text-2xl font-bold mb-6 text-center">
+      Home Purchase Timing Calculator: March 2024 vs. March 2025
+    </h1>
       
       
       {/* Property Type Selection */}
-<div className="mb-6 bg-yellow-50 p-4 rounded-lg">
-  <h2 className="text-xl font-bold mb-4">Select Property Type</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="mb-6 bg-yellow-50 p-4 rounded-lg">
+  <h2 className="text-xl font-bold mb-4">Select Property Type & Financial Case</h2>
 
-    <button
-      title="All SFH across Miami"
-      className={`p-2 rounded-md text-sm ${propertyType === 'median-single-family' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('median-single-family')}
-    >
-      Median Single Family
-    </button>
+  <div className="flex flex-col md:flex-row gap-4">
+    
+    {/* Left Section: Property Type Buttons */}
+    <div className="flex-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          title="All SFH across Miami"
+          className={`p-2 rounded-md text-sm ${propertyType === 'median-single-family' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('median-single-family')}
+        >
+          Median Single Family
+        </button>
 
-    <button
-      title="All Condos in Miami"
-      className={`p-2 rounded-md text-sm ${propertyType === 'median-condo' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('median-condo')}
-    >
-      Median Condos
-    </button>
+        <button
+          title="All Condos in Miami"
+          className={`p-2 rounded-md text-sm ${propertyType === 'median-condo' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('median-condo')}
+        >
+          Median Condos
+        </button>
 
-    <button
-      title="SFH with up to 2 Beds and <1250 sqft"
-      className={`p-2 rounded-md text-sm ${propertyType === 'starter' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('starter')}
-    >
-      Starter Homes
-    </button>
+        <button
+          title="SFH with up to 2 Beds and &lt;1250 sqft"
+          className={`p-2 rounded-md text-sm ${propertyType === 'starter' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('starter')}
+        >
+          Starter Homes
+        </button>
 
-    <button
-      title="SFH with 3–4 Beds and 1250–2500 sqft"
-      className={`p-2 rounded-md text-sm ${propertyType === 'mid-market' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('mid-market')}
-    >
-      Mid Market Homes
-    </button>
+        <button
+          title="SFH with 3–4 Beds and 1250–2500 sqft"
+          className={`p-2 rounded-md text-sm ${propertyType === 'mid-market' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('mid-market')}
+        >
+          Mid Market Homes
+        </button>
 
-    <button
-      title="SFH with 4+ Beds and 3000+ sqft"
-      className={`p-2 rounded-md text-sm ${propertyType === 'luxury' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('luxury')}
-    >
-      Luxury Homes
-    </button>
+        <button
+          title="SFH with 4+ Beds and 3000+ sqft"
+          className={`p-2 rounded-md text-sm ${propertyType === 'luxury' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('luxury')}
+        >
+          Luxury Homes
+        </button>
 
-    <button
-      title="SFH with 5+ Beds, 4000+ sqft, and 4+ Baths"
-      className={`p-2 rounded-md text-sm ${propertyType === 'ultra-luxury' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('ultra-luxury')}
-    >
-      Ultra Luxury Homes
-    </button>
+        <button
+          title="SFH with 5+ Beds, 4000+ sqft, and 4+ Baths"
+          className={`p-2 rounded-md text-sm ${propertyType === 'ultra-luxury' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('ultra-luxury')}
+        >
+          Ultra Luxury Homes
+        </button>
 
-    <button
-      title="SFHs in Coral Gables"
-      className={`p-2 rounded-md text-sm ${propertyType === 'coral-gables' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-      onClick={() => setPropertyType('coral-gables')}
-    >
-      Coral Gables Homes
-    </button>
+        <button
+          title="SFHs in Coral Gables"
+          className={`p-2 rounded-md text-sm ${propertyType === 'coral-gables' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          onClick={() => setPropertyType('coral-gables')}
+        >
+          Coral Gables Homes
+        </button>
+      </div>
+    </div>
+
+    {/* Right Section: Financial Case Dropdown */}
+    <div className="flex-1">
+      <label className="block text-sm font-semibold mb-2">Select Financial Case</label>
+      <select
+        className="w-full p-2 rounded-md border border-gray-300"
+        value={financialCase}
+        onChange={(e) => {
+          const selected = e.target.value;
+          setFinancialCase(selected);
+
+          // Update financial values based on selected case
+          switch (selected) {
+            case '20-down-rent':
+              setDownPaymentPercentMarch2024(20);
+              setDownPaymentPercentMarch2025(20);
+              setFinancialValues({
+                paysRent: true,
+              });
+              break;
+            case '20-down-norent':
+              setDownPaymentPercentMarch2024(20);
+              setDownPaymentPercentMarch2025(20);
+              setFinancialValues({
+                paysRent: false,
+              });
+              break;
+            case '100-down-norent':
+              setDownPaymentPercentMarch2024(100);
+              setDownPaymentPercentMarch2025(100);
+              setFinancialValues({
+                paysRent: false,
+              });
+              break;
+            case '100-down-rent':
+              setDownPaymentPercentMarch2024(100);
+              setDownPaymentPercentMarch2025(100);
+              setFinancialValues({
+                paysRent: true,
+              });
+              break;
+            default:
+              break;
+          }
+        }}
+      >
+        <option value="20-down-rent">20% Downpayment + Rent</option>
+        <option value="20-down-norent">20% Downpayment + No Rent</option>
+        <option value="100-down-norent">100% Downpayment + No Rent</option>
+        <option value="100-down-rent">100% Downpayment + Rent</option>
+      </select>
+    </div>
 
   </div>
 </div>
+
+
 
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -801,146 +909,200 @@ const HomePurchase1 = () => {
                         <div className="bg-blue-50 p-4 rounded-lg">
                         <h3 className="text-lg font-bold mb-3">March 2024 Purchase Cash Flow</h3>
                         
-                        <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Initial Investment</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Down Payment:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.downPayment)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Closing Costs:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.closingCosts)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Total Initial Cash Outflow:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.totalInitialCashOutflow)}</span>
-                            </div>
-                        </div>
+                      <div className="mb-4">
+                    <h4 className="font-semibold mb-2 flex justify-between">
+                      <span>Purchase Cost</span>
+                      <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.totalInitialCashOutflow)}</span>
+                    </h4>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Down Payment:</span>
+                      <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.downPayment)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Closing Costs:</span>
+                      <span>{formatCurrency(cashFlowResults.march2024.initialInvestment.closingCosts)}</span>
+                    </div>
+                  </div>
                         
                         <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Monthly Outflow</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Mortgage (P&I):</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.mortgagePI)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Property Tax:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.propertyTax)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Insurance:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.insurance)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>HOA:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.hoa)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Maintenance:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.maintenance)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium mb-1">
-                            <span>Total Monthly Payment:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.totalMonthly)}/mo</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Total for 12 months:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.totalFor12Months)}</span>
-                            </div>
-                        </div>
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Monthly Outflow</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.totalMonthly)}/mo</span>
+  </h4>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Mortgage (P&I):</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.mortgagePI)}/mo</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Property Tax:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.propertyTax)}/mo</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Insurance:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.insurance)}/mo</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>HOA:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.hoa)}/mo</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Maintenance:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.maintenance)}/mo</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Rent:</span>
+    <span>{formatCurrency(0)}/mo</span>
+  </div>
+</div>
+
+                        <div className="mb-4">
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Annual Outflow</span>
+    <span>{formatCurrency(cashFlowResults.march2024.monthlyOutflow.totalFor12Months)}</span>
+  </h4>
+</div>
+
+                        
+                       <div className="mb-4">
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Return on Investment</span>
+    <span>
+      {formatCurrency(
+        cashFlowResults.march2024.assetValue.principalPaid +
+        cashFlowResults.march2024.assetValue.appreciation +
+        0
+      )}
+    </span>
+  </h4>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Appreciation:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.assetValue.appreciation)}</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Principal Paid:</span>
+    <span>{formatCurrency(cashFlowResults.march2024.assetValue.principalPaid)}</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Investment returns:</span>
+    <span>{formatCurrency(0)}</span>
+  </div>
+</div>
+
                         
                         <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Asset Value Changes</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Initial Home Value:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.assetValue.initialValue)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Value After 12 Months:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.assetValue.valueAfter12Months)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Appreciation:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.assetValue.appreciation)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Principal Paid:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.assetValue.principalPaid)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Total Equity Gained:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.assetValue.totalEquityGained)}</span>
-                            </div>
-                        </div>
+  <h4 className="font-semibold mb-2">
+    Net Cash Position: {formatCurrency(cashFlowResults.march2024.cashEfficiency.netCashPosition)}
+  </h4>
+</div>
+
                         
-                        <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Cash Efficiency</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Total Cash Invested:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.cashEfficiency.totalCashInvested)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Total Value Gained:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.cashEfficiency.totalValueGained)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Cash Efficiency Ratio:</span>
-                            <span>{cashFlowResults.march2024.cashEfficiency.cashEfficiencyRatio.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Net Cash Position:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.cashEfficiency.netCashPosition)}</span>
-                            </div>
-                        </div>
-                        
-                        <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Opportunity Cost</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Potential Investment Returns:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.opportunityCost.potentialInvestmentReturns)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Net After Opportunity Cost:</span>
-                            <span>{formatCurrency(cashFlowResults.march2024.opportunityCost.netAfterOpportunityCost)}</span>
-                            </div>
-                        </div>
+                       
                         </div>
                         
                         {/* March 2025 Cash Flow Analysis */}
                         <div className="bg-green-50 p-4 rounded-lg">
                         <h3 className="text-lg font-bold mb-3">March 2025 Purchase Cash Flow</h3>
+                      
                         
-                        <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Pre-Purchase Period</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Total Rent Paid:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Investment Returns:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.investmentReturns)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Net Pre-Purchase Position:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.netPrePurchasePosition)}</span>
-                            </div>
-                        </div>
-                        
-                        <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Purchase Costs</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Down Payment:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.downPayment)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Closing Costs:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.closingCosts)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Total Purchase Costs:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.totalPurchaseCosts)}</span>
-                            </div>
-                        </div>
+                                        <div className="mb-4">
+                    <h4 className="font-semibold mb-2 flex justify-between">
+                      <span>Purchase Costs</span>
+                      <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.totalPurchaseCosts)}</span>
+                    </h4>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Down Payment:</span>
+                      <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.downPayment)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Closing Costs:</span>
+                      <span>{formatCurrency(cashFlowResults.march2025.purchaseCosts.closingCosts)}</span>
+                    </div>
+                  </div>
+
+
+                       <div className="mb-4">
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Monthly Outflow</span>
+    <span>
+      {financialValues.paysRent
+        ? `${formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid / 12)}/mo`
+        : `${formatCurrency(((0.25 * homePriceMarch2024)/100))}/mo`}
+    </span>
+  </h4>
+
+  <div className="flex justify-between text-sm mb-1">
+    <span>Mortgage (P&I):</span>
+    <span>—</span>
+  </div>
+
+  <div className="flex justify-between text-sm mb-1">
+    <span>Property Tax:</span>
+    <span>—</span>
+  </div>
+
+  <div className="flex justify-between text-sm mb-1">
+    <span>Insurance:</span>
+    <span>—</span>
+  </div>
+
+  <div className="flex justify-between text-sm mb-1">
+    <span>HOA:</span>
+    <span>—</span>
+  </div>
+
+  {financialValues.paysRent ? (
+    <>
+      <div className="flex justify-between text-sm mb-1">
+        <span>Maintenance:</span>
+        <span>—</span>
+      </div>
+      <div className="flex justify-between text-sm mb-1">
+        <span>Rent:</span>
+        <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid / 12)}/mo</span>
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="flex justify-between text-sm mb-1">
+        <span>Maintenance:</span>
+        <span>{formatCurrency(((0.25 * homePriceMarch2024)/100))}/mo</span>
+      </div>
+      <div className="flex justify-between text-sm mb-1">
+        <span>Rent:</span>
+        <span>—</span>
+      </div>
+    </>
+  )}
+</div>
+
+
+
+                         <div className="mb-4">
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Annual Outflow</span>
+    <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid)}</span>
+  </h4>
+</div>
+
+                       <div className="mb-4">
+  <h4 className="font-semibold mb-2 flex justify-between">
+    <span>Return on Investment</span>
+    <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.investmentReturns)}</span>
+  </h4>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Appreciation:</span>
+    <span>{formatCurrency(0)}</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Principal Paid:</span>
+    <span>{formatCurrency(0)}</span>
+  </div>
+  <div className="flex justify-between text-sm mb-1">
+    <span>Investment returns:</span>
+    <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.investmentReturns)}</span>
+  </div>
+</div>
+
                         
                         {/* <div className="mb-4">
                             <h4 className="font-semibold mb-2">Total Position</h4>
@@ -956,31 +1118,24 @@ const HomePurchase1 = () => {
                         </div> */}
                         
                         <div className="mb-4">
-                            <h4 className="font-semibold mb-2">Cash Efficiency</h4>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Total Cash Invested:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.cashEfficiency.totalCashInvested)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mb-1">
-                            <span>Total Value Gained:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.cashEfficiency.totalValueGained)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Cash Efficiency Ratio:</span>
-                            <span>{cashFlowResults.march2025.cashEfficiency.cashEfficiencyRatio.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-medium">
-                            <span>Net Cash Position:</span>
-                            <span>{formatCurrency(cashFlowResults.march2025.totalPosition.netCashPosition)}</span>
-                            </div>
-                        </div>
+  <h4 className="font-semibold mb-2">
+    Net Cash Position: {formatCurrency(
+      financialValues.paysRent
+        ? cashFlowResults.march2025.totalPosition.netCashPosition
+        : cashFlowResults.march2025.totalPosition.netCashPositionNoRent
+    )}
+  </h4>
+</div>
+
+
+
                         </div>
                     </div>
                     
                     {/* Final Cash Flow Comparison */}
                     <div className="mt-6 bg-gray-100 p-4 rounded-lg">
                         <div className="text-center">
-                        <h3 className="text-xl font-bold mb-2">Cash Flow Comparison</h3>
+                        <h3 className="text-xl font-bold mb-2">Waiting Benefit</h3>
                         <p className="text-2xl font-bold mb-2">
                             {cashFlowResults.comparison.difference > 0 ? "+" : ""}{formatCurrency(cashFlowResults.comparison.difference)}
                         </p>
@@ -989,103 +1144,13 @@ const HomePurchase1 = () => {
                         </p>
                         </div>
                     </div>
+
                     </div>)}
                     
             </div>
       
       {/* Results */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4 text-center">Results</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* March 2024 Results */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-lg font-bold mb-3">March 2024 Purchase</h3>
-            
-            <div className="mb-2">
-            <div className="flex justify-between">
-                <span>Total Costs (12 months):</span>
-                <span className="font-medium">{formatCurrency(results.march2024.totalCost)}</span>
-            </div>
-            </div>
-            
-            <div className="mb-2">
-            <div className="flex justify-between">
-                <span>Home Equity Built:</span>
-                <span className="font-medium">{formatCurrency(results.march2024.equity)}</span>
-            </div>
-            </div>
-            
-            <div className="mt-4 pt-2 border-t border-blue-200">
-            <div className="flex justify-between">
-                <span className="font-bold">Net Financial Position:</span>
-                <span className="font-bold">{formatCurrency(results.march2024.netPosition)}</span>
-            </div>
-            </div>
-        </div>
-            {/* March 2025 Results */}
-            <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="text-lg font-bold mb-3">March 2025 Purchase</h3>
-            
-            <div className="mb-2">
-            <div className="flex justify-between">
-                <span>Total Costs:</span>
-                <span className="font-medium">{formatCurrency(results.march2025.totalCost)}</span>
-            </div>
-            </div>
-
-            <div className="mb-2">
-            <div className="flex justify-between">
-                <span>Home Equity Built (DownPayment):</span>
-                <span className="font-medium">{formatCurrency(results.march2025.equity)}</span>
-            </div>
-            </div>
-            
-            <div className="mb-2">
-            <div className="flex justify-between">
-                <span>Investment Returns:</span>
-                <span className="font-medium">{formatCurrency(results.march2025.investmentReturns)}</span>
-            </div>
-            </div>
-            
-            <div className="mt-4 pt-2 border-t border-green-200">
-            <div className="flex justify-between">
-                <span className="font-bold">Net Financial Position:</span>
-                <span className="font-bold">{formatCurrency(results.march2025.netPosition)}</span>
-            </div>
-            </div>
-        </div>
-        </div>
-
-        
-        {/* Final Comparison */}
-        <div className="mt-6 bg-gray-100 p-4 rounded-lg">
-          <div className="text-center">
-            <h3 className="text-xl font-bold mb-2">Financial Impact of Waiting</h3>
-            <p className="text-2xl font-bold mb-2">
-              {results.difference > 0 ? "+" : ""}{formatCurrency(results.difference)}
-            </p>
-            <p className={`text-lg font-medium ${results.difference > 0 ? "text-green-600" : "text-red-600"}`}>
-              {results.recommendation}
-            </p>
-          </div>
-        </div>
-             
-        
-        {/* Methodology Details */}
-                <div cla1ssName="mt-6 bg-white border border-gray-200 p-4 rounded-lg">
-                <h3 className="text-lg font-bold mb-2">Methodology & Assumptions</h3>
-                <div className="text-sm text-gray-700">
-                    <p className="mb-2">This calculator compares two scenarios to determine if waiting to purchase was financially advantageous:</p>
-                    <ol className="list-decimal list-inside mb-2">
-                    <li className="mb-1"><strong>March 2024 Scenario:</strong> Calculates equity built (down payment + principal paid + appreciation) minus costs (mortgage payments, taxes, insurance, HOA, maintenance).</li>
-                    <li className="mb-1"><strong>March 2025 Scenario:</strong> Calculates investment returns on the down payment minus costs (rent paid).</li>
-                    </ol>
-                    <p className="mb-2">The difference between these positions represents the financial impact of waiting to purchase.</p>
-                    <p><strong>Data Sources:</strong> The default values for Miami housing are based on median home prices, typical property tax rates, insurance costs, and maintenance estimates specific to the Miami market.</p>
-                </div>
-                </div>
-      </div>
+      
  
     </div>
   );
