@@ -43,22 +43,7 @@ const [financialValues, setFinancialValues] = useState({
 
   
   
-  // Results
-  const [results, setResults] = useState({
-    march2024: {
-      totalCost: 0,
-      equity: 0,
-      netPosition: 0
-    },
-    march2025: {
-      totalCost: 0,
-      investmentReturns: 0,
-      equity:0,
-      netPosition: 0
-    },
-    difference: 0,
-    recommendation: ''
-  });
+  
 
   //cash flow results
   const [cashFlowResults, setCashFlowResults] = useState({
@@ -111,6 +96,7 @@ const [financialValues, setFinancialValues] = useState({
         investmentReturns: 0,
         netCashPosition: 0,
         netCashPositionNoRent: 0,
+        maintainCostNoRent: 0,
       },
       cashEfficiency: {
         totalCashInvested: 0,
@@ -132,89 +118,7 @@ const [financialValues, setFinancialValues] = useState({
   }, [homePriceMarch2024, homePriceAppreciationPercent]);
 
   //normal calculation function
-  const calculateResults = () => {
-    // Calculate down payments
-    const downPaymentMarch2024 = homePriceMarch2024 * (downPaymentPercentMarch2024 / 100);
-    const downPaymentMarch2025 = homePriceMarch2025 * (downPaymentPercentMarch2025 / 100);
-    
-    // Calculate loan amounts
-    const loanAmountMarch2024 = homePriceMarch2024 - downPaymentMarch2024;
-    const loanAmountMarch2025 = homePriceMarch2025 - downPaymentMarch2025;
-    
-    // Calculate monthly mortgage payments
-    const monthlyInterestRateMarch2024 = mortgageRateMarch2024 / 100 / 12;
-    const numberOfPaymentsMarch2024 = mortgageTermMarch2024 * 12;
-    const monthlyMortgagePaymentMarch2024 = loanAmountMarch2024 * 
-      (monthlyInterestRateMarch2024 * Math.pow(1 + monthlyInterestRateMarch2024, numberOfPaymentsMarch2024)) / 
-      (Math.pow(1 + monthlyInterestRateMarch2024, numberOfPaymentsMarch2024) - 1);
-    
-    const monthlyInterestRateMarch2025 = mortgageRateMarch2025 / 100 / 12;
-    const numberOfPaymentsMarch2025 = mortgageTermMarch2025 * 12;
-    const monthlyMortgagePaymentMarch2025 = loanAmountMarch2025 * 
-      (monthlyInterestRateMarch2025 * Math.pow(1 + monthlyInterestRateMarch2025, numberOfPaymentsMarch2025)) / 
-      (Math.pow(1 + monthlyInterestRateMarch2025, numberOfPaymentsMarch2025) - 1);
-    
-    // Calculate monthly property tax
-    const monthlyPropertyTaxMarch2024 = (homePriceMarch2024 * (annualPropertyTaxRate / 100)) / 12;
-    const monthlyPropertyTaxMarch2025 = (homePriceMarch2025 * (annualPropertyTaxRate / 100)) / 12;
-    
-    // Calculate monthly insurance
-    const monthlyInsurance = annualHomeInsurance / 12;
-    
-    // Calculate total monthly payment (PITI + HOA)
-    const totalMonthlyPaymentMarch2024 = monthlyMortgagePaymentMarch2024 + monthlyPropertyTaxMarch2024 + monthlyInsurance + monthlyHOA;
-    const totalMonthlyPaymentMarch2025 = monthlyMortgagePaymentMarch2025 + monthlyPropertyTaxMarch2025 + monthlyInsurance + monthlyHOA;
-    
-    // Calculate total payments over the waiting period (12 months instead of 13)
-    const totalPaymentsMarch2024 = totalMonthlyPaymentMarch2024 * 12;
-    
-    // Calculate principal paid during the waiting period (12 months instead of 13)
-    const principalPaidMarch2024 = calculatePrincipalPaid(loanAmountMarch2024, monthlyInterestRateMarch2024, monthlyMortgagePaymentMarch2024, 12);
-    
-    // Calculate home equity after waiting period
-    const equityMarch2024 = downPaymentMarch2024 + principalPaidMarch2024 + (homePriceMarch2025 - homePriceMarch2024);
-    
-    // Calculate total rent paid (12 months instead of 13)
-    const totalRentPaid = monthlyRent * 12;
-    
-    // Calculate investment returns on down payment (12 months instead of 13/12)
-    const investmentReturns = downPaymentMarch2025 * (investmentReturnRate / 100);
-    
-    // Calculate closing costs for both scenarios
-    const closingCostsMarch2024 = homePriceMarch2024 * (closingCostsPercent / 100);
-    const closingCostsMarch2025 = homePriceMarch2025 * (closingCostsPercent / 100);
-    
-    // Calculate maintenance costs avoided (12 months instead of 13/12)
-    const maintenanceAvoided = annualMaintenance;
-    
-    // Calculate net position for each scenario
-    const march2024NetPosition = equityMarch2024 - totalPaymentsMarch2024 - closingCostsMarch2024 - annualMaintenance;
-    const march2025NetPosition =  downPaymentMarch2025 + investmentReturns - totalRentPaid - closingCostsMarch2025;
-    
-    // Calculate difference
-    const difference = march2025NetPosition - march2024NetPosition;
-    
-    // Determine recommendation
-    const recommendation = difference > 0 
-      ? "Waiting to purchase was financially advantageous."
-      : "Purchasing in March 2024 would have been better financially.";
-    
-    setResults({
-      march2024: {
-        totalCost: Math.round(totalPaymentsMarch2024 + closingCostsMarch2024 + maintenanceAvoided),
-        equity: Math.round(equityMarch2024),
-        netPosition: Math.round(march2024NetPosition)
-      },
-      march2025: {
-        totalCost: Math.round(totalRentPaid + closingCostsMarch2025),
-        investmentReturns: Math.round(investmentReturns),
-        equity: Math.round(downPaymentMarch2025),
-        netPosition: Math.round(march2025NetPosition)
-      },
-      difference: Math.round(difference),
-      recommendation: recommendation
-    });
-  };
+ 
   
   //cash flow calculation function
   const calculateCashFlowResults = () => {
@@ -242,6 +146,7 @@ const [financialValues, setFinancialValues] = useState({
     const CFA_march2024_monthlyTotalPayment = CFA_march2024_monthlyMortgagePI + CFA_march2024_monthlyPropertyTax + 
       CFA_march2024_monthlyInsurance + monthlyHOA + CFA_march2024_monthlyMaintenance;
     const CFA_march2024_totalPayments12Months = CFA_march2024_monthlyTotalPayment * 12;
+    console.log("payment", CFA_march2024_monthlyTotalPayment, CFA_march2024_totalPayments12Months )
   
     // Calculate principal paid during the waiting period
     const CFA_march2024_principalPaid = calculatePrincipalPaid(
@@ -259,7 +164,7 @@ const [financialValues, setFinancialValues] = useState({
   
     // Cash Efficiency Metrics
     const CFA_march2024_totalCashInvested = CFA_march2024_totalInitialCashOutflow + CFA_march2024_totalPayments12Months;
-    const CFA_march2024_totalValueGained = CFA_march2024_downPayment + CFA_march2024_principalPaid + CFA_march2024_homeAppreciation;
+    const CFA_march2024_totalValueGained =  CFA_march2024_principalPaid + CFA_march2024_homeAppreciation;
     const CFA_march2024_cashEfficiencyRatio = CFA_march2024_totalValueGained / CFA_march2024_totalCashInvested;
     const CFA_march2024_netCashPosition = CFA_march2024_totalValueGained - CFA_march2024_totalCashInvested;
   
@@ -281,12 +186,13 @@ const [financialValues, setFinancialValues] = useState({
   
     // Total Position
     const CFA_march2025_totalCashSpent = CFA_march2025_totalRentPaid + CFA_march2025_totalPurchaseCosts;
-    const CFA_march2025_netCashPosition = CFA_march2025_investmentReturns - CFA_march2025_totalRentPaid - CFA_march2025_closingCosts;
-    const CFA_march2025_netCashPosition_no_rent = CFA_march2025_investmentReturns - CFA_march2025_closingCosts - ((0.25 * homePriceMarch2024) /100) *12;
+    const CFA_march2025_netCashPosition = CFA_march2025_investmentReturns - CFA_march2025_totalRentPaid - CFA_march2025_closingCosts - CFA_march2025_downPayment ;
+    const CFA_march2025_netCashPosition_no_rent = CFA_march2025_investmentReturns - CFA_march2025_closingCosts - ((0.20 * homePriceMarch2024) /100) *12 - CFA_march2025_downPayment;
   
     // Cash Efficiency Metrics
+    const CFA_march2025_maintainCost_no_rent = (0.20* homePriceMarch2024) /100;
     const CFA_march2025_totalCashInvested = CFA_march2025_totalRentPaid + CFA_march2025_downPayment + CFA_march2025_closingCosts;
-    const CFA_march2025_totalCashInvested_no_rent = CFA_march2025_downPayment + CFA_march2025_closingCosts + ((0.25 * homePriceMarch2024) /100) *12;
+    const CFA_march2025_totalCashInvested_no_rent = CFA_march2025_downPayment + CFA_march2025_closingCosts + (CFA_march2025_maintainCost_no_rent *12);
     const CFA_march2025_totalValueGained = CFA_march2025_downPayment + CFA_march2025_investmentReturns;
     const CFA_march2025_cashEfficiencyRatio = CFA_march2025_totalValueGained / CFA_march2025_totalCashInvested;
   
@@ -347,7 +253,8 @@ const [financialValues, setFinancialValues] = useState({
           totalCashSpent: Math.round(CFA_march2025_totalCashSpent),
           investmentReturns: Math.round(CFA_march2025_investmentReturns),
           netCashPosition: Math.round(CFA_march2025_netCashPosition),
-          netCashPositionNoRent : Math.round(CFA_march2025_netCashPosition_no_rent)
+          netCashPositionNoRent : Math.round(CFA_march2025_netCashPosition_no_rent),
+          maintainCostNoRent : Math.round(CFA_march2025_maintainCost_no_rent)
         },
         cashEfficiency: {
           totalCashInvested: Math.round(CFA_march2025_totalCashInvested),
@@ -381,7 +288,7 @@ const [financialValues, setFinancialValues] = useState({
   
   // Calculate results when inputs change
   useEffect(() => {
-    calculateResults();
+    // calculateResults();
     calculateCashFlowResults();
   }, [
     homePriceMarch2024, downPaymentPercentMarch2024, mortgageRateMarch2024, mortgageTermMarch2024,
@@ -462,28 +369,30 @@ const [financialValues, setFinancialValues] = useState({
   return (
     <div className="max-w-4xl mx-auto p-4">
         {/* Branding Header */}
-    <div className="flex items-center justify-between bg-gray-100 rounded-xl shadow-sm p-4 mb-6">
-    {/* Logo with background */}
-    <div className="bg-white px-3 py-2 rounded-lg shadow border border-gray-200">
-      <img src="logo.png" alt="Logo" className="h-14 w-auto" />
-    </div>
-
-    {/* Agent Mira photo with name */}
-    <div className="flex items-center space-x-3">
-      <img
-        src="/agent-mira-pic.png"
-        alt="Agent Mira"
-        className="h-20 w-20 rounded-full object-cover border-2 border-blue-400 shadow-lg"
-      />
-      <div>
-        <p className="text-sm text-gray-600">Your Trusted Advisor</p>
-        <p className="font-semibold text-blue-700 text-lg">Agent Mira</p>
-      </div>
-    </div>
+<div className="flex items-center justify-between bg-gray-100 rounded-xl shadow-sm p-4 mb-6">
+  {/* Logo with background */}
+  <div className="bg-white px-3 py-2 rounded-lg shadow border border-gray-200">
+    <img src="logo.png" alt="Logo" className="h-14 w-auto" />
   </div>
 
+  {/* Agent Mira photo with name and description */}
+  <div className="flex items-center space-x-3">
+    <img
+      src="/agent-mira-pic.png"
+      alt="Agent Mira"
+      className="h-20 w-20 rounded-full object-cover border-2 border-blue-400 shadow-lg"
+    />
+    <div>
+      <p className="text-sm text-gray-600">The World’s First Home Buyer Advocate</p>
+      <p className="font-semibold text-blue-700 text-lg">Agent Mira</p>
+      <p className="text-xs text-gray-500 mt-1">Powered by AI, Expertise and Transparency</p>
+    </div>
+  </div>
+</div>
+
+
     <h1 className="text-2xl font-bold mb-6 text-center">
-      Home Purchase Timing Calculator: March 2024 vs. March 2025
+      Cost of Waiting Analysis - March 2024 Vs March 2025
     </h1>
       
       
@@ -1020,13 +929,13 @@ const [financialValues, setFinancialValues] = useState({
                   </div>
 
 
-                       <div className="mb-4">
+   <div className="mb-4">
   <h4 className="font-semibold mb-2 flex justify-between">
     <span>Monthly Outflow</span>
     <span>
       {financialValues.paysRent
         ? `${formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid / 12)}/mo`
-        : `${formatCurrency(((0.25 * homePriceMarch2024)/100))}/mo`}
+        : `${formatCurrency(cashFlowResults.march2025.totalPosition.maintainCostNoRent)}/mo`}
     </span>
   </h4>
 
@@ -1037,12 +946,20 @@ const [financialValues, setFinancialValues] = useState({
 
   <div className="flex justify-between text-sm mb-1">
     <span>Property Tax:</span>
-    <span>—</span>
+    <span>
+      {!financialValues.paysRent
+        ? formatCurrency((cashFlowResults.march2025.totalPosition.maintainCostNoRent || 0) * 0.36) + "/mo"
+        : "—"}
+    </span>
   </div>
 
   <div className="flex justify-between text-sm mb-1">
     <span>Insurance:</span>
-    <span>—</span>
+    <span>
+      {!financialValues.paysRent
+        ? formatCurrency((cashFlowResults.march2025.totalPosition.maintainCostNoRent || 0) * 0.29) + "/mo"
+        : "—"}
+    </span>
   </div>
 
   <div className="flex justify-between text-sm mb-1">
@@ -1065,7 +982,9 @@ const [financialValues, setFinancialValues] = useState({
     <>
       <div className="flex justify-between text-sm mb-1">
         <span>Maintenance:</span>
-        <span>{formatCurrency(((0.25 * homePriceMarch2024)/100))}/mo</span>
+        <span>
+          {formatCurrency((cashFlowResults.march2025.totalPosition.maintainCostNoRent || 0) * 0.35)}/mo
+        </span>
       </div>
       <div className="flex justify-between text-sm mb-1">
         <span>Rent:</span>
@@ -1077,12 +996,18 @@ const [financialValues, setFinancialValues] = useState({
 
 
 
-                         <div className="mb-4">
+
+   <div className="mb-4">
   <h4 className="font-semibold mb-2 flex justify-between">
     <span>Annual Outflow</span>
-    <span>{formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid)}</span>
+    <span>
+      {financialValues.paysRent
+        ? formatCurrency(cashFlowResults.march2025.prePurchasePeriod.totalRentPaid)
+        : formatCurrency((cashFlowResults.march2025.totalPosition.maintainCostNoRent || 0) * 12)}
+    </span>
   </h4>
 </div>
+
 
                        <div className="mb-4">
   <h4 className="font-semibold mb-2 flex justify-between">
